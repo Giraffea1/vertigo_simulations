@@ -99,7 +99,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
             throw cRuntimeError("We are not using v2pifo, why we still have v2pifo queues?");
 
         if (getParentModule()->getIndex() == 0) {
-            std::cout << "You're setting for forwarding and bouncing is: " << endl <<
+            std::cout << "Your setting for forwarding and bouncing is: " << endl <<
                     "use_ecmp: " << use_ecmp << endl <<
                     "use_power_of_n_lb: " << use_power_of_n_lb << endl <<
                     "bounce_randomly: " << bounce_randomly << endl <<
@@ -151,6 +151,7 @@ void BouncingIeee8021dRelay::registerAddresses(MacAddress startMac, MacAddress e
     registeredMacAddresses.insert(MacAddressPair(startMac, endMac));
 }
 
+// ?lower packet mean from other switch
 void BouncingIeee8021dRelay::handleLowerPacket(Packet *packet)
 {
     // messages from network
@@ -162,6 +163,7 @@ void BouncingIeee8021dRelay::handleLowerPacket(Packet *packet)
     handleAndDispatchFrame(packet);
 }
 
+// ?upperpacket meaning from uppder layer
 void BouncingIeee8021dRelay::handleUpperPacket(Packet *packet)
 {
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
@@ -202,6 +204,7 @@ bool BouncingIeee8021dRelay::isForwardingInterface(InterfaceEntry *ie)
     return true;
 }
 
+// ?broadcast to where
 void BouncingIeee8021dRelay::broadcast(Packet *packet, int arrivalInterfaceId)
 {
     if (!learn_mac_addresses) {
@@ -278,6 +281,7 @@ const uint64_t string_to_mac(std::string const& s) {
         );
 }
 
+// ? handle a packet when packet is from lower
 void BouncingIeee8021dRelay::handleAndDispatchFrame(Packet *packet)
 {
     b packet_position = packet->getFrontOffset();
@@ -355,7 +359,7 @@ void BouncingIeee8021dRelay::handleAndDispatchFrame(Packet *packet)
 void BouncingIeee8021dRelay::chooseDispatchType(Packet *packet, InterfaceEntry *ie){
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
     std::list<int> destInterfaceIds = macTable->getInterfaceIdForAddress(frame->getDest());
-
+    // ? when they would be multiple destInterfaceIds
     int portNum = destInterfaceIds.size();
     Chunk::enableImplicitChunkSerialization = true;
     std::string protocol = packet->getName();
@@ -835,6 +839,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
     send(packet, "ifOut");
 }
 
+// ? add new srcAddr to adressTable which represents which port has which mac adress
 void BouncingIeee8021dRelay::learn(MacAddress srcAddr, int arrivalInterfaceId)
 {
     Ieee8021dInterfaceData *port = getPortInterfaceData(arrivalInterfaceId);

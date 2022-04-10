@@ -1,3 +1,10 @@
+# Cloud Computing Class Project
+This is a revised version of Vertigo with the following differences:
+
+Instead of deflecting packets, we will be implementing a overflow buffer queue where packets will be stored temporarily. The overflow queue will pop out the packets in a preset time interval.
+
+
+# _________________ORIGINAL SIMULATION_____________________
 # Vertigo Omnet++ simulation files
 
 ## Re-producing the simulation results

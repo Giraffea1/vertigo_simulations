@@ -143,6 +143,7 @@ int V2PIFO::getNumPacketsToEject(b packet_length, long seq, long ret_count,
     return -1;
 }
 
+// pop out num_packets_to_eject from the sorted_queued_packet_table and store those in a list then return the list
 std::list<Packet*> V2PIFO::eject_and_push(int num_packets_to_eject) {
     if (dropper_type == FIFO) {
         // If you're acting FIFO, there is no sense in ejecting any packets, how are you deciding
