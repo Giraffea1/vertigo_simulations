@@ -80,6 +80,10 @@ void BouncingIeee8021dRelay::initialize(int stage)
         bounce_randomly = getAncestorPar("bounce_randomly");
 
         // Power of N bouncing
+
+        // Qiao: initialized the overflow buffer
+        buffer = getModuleFromPar<IPacketBuffer>(par("bufferModule"), this, false);
+
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
         random_power_bounce_factor = getAncestorPar("random_power_bounce_factor");
@@ -650,8 +654,9 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         emit(packetSentToLowerSignal, packet);
         send(packet, "ifOut");
     }
-
+    
     // deflect the remaining packets
+    /*
     while (ejected_packets.size() > 0){
 
         // This forwards or bounces the packet randomly to ports with free space using power of two choices
@@ -752,6 +757,22 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         packet->trim();
         emit(packetSentToLowerSignal, packet);
         send(packet, "ifOut");
+    }
+    */
+    // Qiao: send the ejectedPackets to overflow buffer
+    while (ejected_packets.size() > 0){
+        auto packet = ejected_packets.front();
+        EV << "Forwarding the ejected packet " << packet->str() << endl;
+        ejected_packets.pop_front();
+
+        if (buffer != nullptr) {
+            // Qiao: add packet to the overflow queue if the buffer is not overloaded
+            buffer->addPacket(packet);
+        } else {
+            // drop packet if there's no buffer
+            cout << "deleting packet " << packet->getName() << " because there is no buffer"
+            delete packet;
+        }
     }
 }
 

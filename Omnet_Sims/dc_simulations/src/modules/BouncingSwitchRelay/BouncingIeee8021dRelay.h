@@ -28,6 +28,7 @@
 #include "../LSSwitch/LSMACTable/LSIMacAddressTable.h"
 #include "../Augmented_Mac/AugmentedEtherMac.h"
 #include "../V2/V2PIFO.h"
+#include "inet/queueing/contract/IPacketBuffer.h"
 
 using namespace inet;
 
@@ -75,6 +76,10 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
     /*
      * V2
      */
+
+    // Qiao: Overflow buffer
+    IPacketBuffer *buffer = nullptr;
+
     bool bounce_randomly_v2;
     bool use_v2_pifo;
 
