@@ -770,7 +770,7 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
             buffer->addPacket(packet);
         } else {
             // drop packet if there's no buffer
-            cout << "deleting packet " << packet->getName() << " because there is no buffer"
+            std::cout << "deleting packet " << packet->getName() << " because there is no buffer" << endl;
             delete packet;
         }
     }
