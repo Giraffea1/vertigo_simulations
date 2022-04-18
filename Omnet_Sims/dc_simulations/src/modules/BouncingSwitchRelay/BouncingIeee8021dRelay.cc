@@ -768,6 +768,7 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         if (buffer != nullptr) {
             // Qiao: add packet to the overflow queue if the buffer is not overloaded
             buffer->addPacket(packet);
+            std::cout << "adding packet to buffer" << endl;
         } else {
             // drop packet if there's no buffer
             std::cout << "deleting packet " << packet->getName() << " because there is no buffer" << endl;
