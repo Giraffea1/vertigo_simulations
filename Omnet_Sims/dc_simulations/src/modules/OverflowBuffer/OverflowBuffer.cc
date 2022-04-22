@@ -11,8 +11,9 @@ Define_Module(OverflowBuffer);
 
 void OverflowBuffer::initialize(int stage)
 {
-    PacketBuffer::initialize(stage);
     /*
+    PacketBuffer::initialize(stage);
+    
     if (stage == INITSTAGE_LOCAL) {
         displayStringTextFormat = par("displayStringTextFormat");
         packetCapacity = par("packetCapacity");
