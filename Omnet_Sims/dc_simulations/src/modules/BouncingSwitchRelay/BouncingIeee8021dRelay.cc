@@ -873,7 +873,10 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
     send(packet, "ifOut");
 
     // ? Qiao pop a packet from overflowBuffer and handle it like an ? upper packet
+    std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
+
     if (popFromOverflow && (!overflowBuffer->isEmpty())) {
+        std::cout << "Before popping packet from overflowBuffer" << endl;
         Packet *packetFromBuffer = overflowBuffer->getPacket(0);
         std::cout << "popped packet from overflowBuffer" << endl;
         handleUpperPacket(packetFromBuffer);
