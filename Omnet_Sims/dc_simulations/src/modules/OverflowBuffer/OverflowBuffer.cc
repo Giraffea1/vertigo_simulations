@@ -12,17 +12,6 @@ Define_Module(OverflowBuffer);
 void OverflowBuffer::initialize(int stage)
 {
     PacketBuffer::initialize(stage);
-    
-    if (stage == INITSTAGE_LOCAL) {
-        displayStringTextFormat = par("displayStringTextFormat");
-        packetCapacity = par("packetCapacity");
-        dataCapacity = b(par("dataCapacity"));
-        const char *dropperClass = par("dropperClass");
-        if (*dropperClass != '\0')
-            packetDropperFunction = check_and_cast<IPacketDropperFunction *>(createOne(dropperClass));
-    }
-    else if (stage == INITSTAGE_LAST)
-        updateDisplayString();
 }
 
 bool OverflowBuffer::isOverloaded()

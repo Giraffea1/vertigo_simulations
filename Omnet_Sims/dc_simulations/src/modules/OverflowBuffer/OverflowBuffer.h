@@ -12,7 +12,7 @@ namespace inet {
 namespace queueing {
 
 // ? use inet_api
-class OverflowBuffer : public PacketBuffer
+class INET_API OverflowBuffer : public PacketBuffer
 {
   protected:
     int packetCapacity = -1;
