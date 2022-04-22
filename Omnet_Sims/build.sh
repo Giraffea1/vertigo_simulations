@@ -4,7 +4,7 @@ coreNum=$(cat /proc/cpuinfo | grep processor | wc -l)
 coreNum=$((coreNum))
 
 echo "$coreNum hyper-threads used for building."
-'
+
 echo -e "-------------------------- make clean -C ./inet/ --------------------------"
 make clean -C ./inet/
 
@@ -14,7 +14,7 @@ make -C ./inet/ makefiles
 echo -e "\n\n-------------------------- make -j $coreNum -C ./inet/ MODE=release all --------------------------"
 make -j $coreNum -C ./inet/ MODE=release all
 
-'
+
 
 # make simulations/src
 
