@@ -87,7 +87,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
         overflowBuffer = new OverflowBuffer();
 
         std::cout << "This is the overflowBuffer just initiated: " << overflowBuffer << endl;
-        std::cout << "This is the overflowBuffer capacity: " << overflowBuffer->1getMaxNumPackets() << endl;
+        std::cout << "This is the overflowBuffer capacity: " << overflowBuffer->getMaxNumPackets() << endl;
 
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
