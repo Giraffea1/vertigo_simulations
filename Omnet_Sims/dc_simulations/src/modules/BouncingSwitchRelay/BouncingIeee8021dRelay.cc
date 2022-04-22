@@ -85,7 +85,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
 
         // Qiao: initialized the overflow buffer
         overflowBuffer = getModuleFromPar<PacketBuffer>(par("bufferModule"), this, false);
-
+        std::cout << "This is the overflowBuffer just initiated: " << overflowBuffer << endl;
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
         random_power_bounce_factor = getAncestorPar("random_power_bounce_factor");

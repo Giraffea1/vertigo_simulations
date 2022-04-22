@@ -13,7 +13,7 @@ rm -rf results
 
 # create the directory to save extracted_results
 bash ./dir_creator.sh
-
+'
 # DCTCP RUNS
 echo "\n\n-------------------------------------------"
 echo "Running DCTCP_ECMP"
@@ -35,7 +35,7 @@ opp_runall -j50 ../../src/dc_simulations -m -u Cmdenv -c DCTCP_DIBS -n ..:../../
 do_extract dctcp_dibs
 mkdir logs/dctcp_dctcp_dibs_sample_1g
 cp results/*.out logs/dctcp_dctcp_dibs_sample_1g/
-
+'
 echo "\n\n-------------------------------------------"
 echo "Running DCTCP_VERTIGO"
 opp_runall -j50 ../../src/dc_simulations -m -u Cmdenv -c DCTCP_V_SRPT_SCH_SRPT_ORD -n ..:../../src:../../../inet/src:../../../inet/examples:../../../inet/tutorials:../../../inet/showcases --image-path=../../../inet/images -l ../../../inet/src/INET simple_1Gbps.ini
