@@ -84,7 +84,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
         // Power of N bouncing
 
         // Qiao: initialized the overflow buffer
-        overflowBuffer = getModuleFromPar<IPacketBuffer>(par("bufferModule"), this, false);
+        overflowBuffer = getModuleFromPar<PacketBuffer>(par("bufferModule"), this, false);
 
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
@@ -767,9 +767,9 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         EV << "Forwarding the ejected packet " << packet->str() << endl;
         ejected_packets.pop_front();
 
-        if (buffer != nullptr) {
+        if (overflowBuffer != nullptr) {
             // Qiao: add packet to the overflow queue if the buffer is not overloaded
-            buffer->addPacket(packet);
+            overflowBuffer->addPacket(packet);
             std::cout << "adding packet to buffer" << endl;
         } else {
             // drop packet if there's no buffer
