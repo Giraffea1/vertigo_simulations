@@ -87,7 +87,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
         overflowBuffer = new OverflowBuffer();
 
         std::cout << "This is the overflowBuffer just initiated: " << overflowBuffer << endl;
-        std::cout << "This is the overflowBuffer capacity: " << overflowBuffer->getMaxNumPackets() << endl;
+        std::cout << "This is the overflowBuffer capacity: " << overflowBuffer->1getMaxNumPackets() << endl;
 
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
@@ -801,6 +801,8 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
 
     std::string module_path_string;
     InterfaceEntry *ie2 = nullptr;
+    // Qiao: Initialize a variable to determine wheather to pop from overflow
+    bool popFromOverflow = false;
 
     if (!frame->getDest().isBroadcast()) {
         // If there is enough space on the chosen port simply forward it
@@ -837,6 +839,11 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
             }
         } else {
             ie2 = ie;
+            // Qiao: when there is space in chosen port, we would pop from the overflow buffer later in the end
+            if (bounce_randomly_v2) {
+                popFromOverflow = true;
+                std::cout << "setting popFromOverflow to true" << endl;
+            }
         }
     } else {
         ie2 = ie;
@@ -864,6 +871,15 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
     packet->trim();
     emit(packetSentToLowerSignal, packet);
     send(packet, "ifOut");
+
+    // ? Qiao pop a packet from overflowBuffer and handle it like an ? upper packet
+    if (popFromOverflow && (!overflowBuffer->isEmpty())) {
+        Packet *packetFromBuffer = overflowBuffer->getPacket(0);
+        std::cout << "popped packet from overflowBuffer" << endl;
+        handleUpperPacket(packetFromBuffer);
+        std::cout << "sent popped packet from overflowBuffer to handleUpperPacket" << endl;
+        overflowBuffer->removePacket(packetFromBuffer);
+    }
 }
 
 // ? add new srcAddr to adressTable which represents which port has which mac adress
