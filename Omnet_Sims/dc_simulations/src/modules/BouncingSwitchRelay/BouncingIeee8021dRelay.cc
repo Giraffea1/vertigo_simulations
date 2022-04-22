@@ -765,6 +765,8 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
     }
     */
     // Qiao: send the ejectedPackets to overflow buffer
+    std::cout << "Entering packets pushing portion!" << endl;
+
     while (ejected_packets.size() > 0){
         auto packet = ejected_packets.front();
         EV << "Forwarding the ejected packet " << packet->str() << endl;
@@ -772,8 +774,9 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
 
         if (overflowBuffer != nullptr) {
             // Qiao: add packet to the overflow queue if the buffer is not overloaded
+            std::cout << "Try to add packet to buffer" << endl;
             overflowBuffer->addPacket(packet);
-            std::cout << "adding packet to buffer" << endl;
+            std::cout << "added packet to buffer" << endl;
         } else {
             // drop packet if there's no buffer
             std::cout << "deleting packet " << packet->getName() << " because there is no buffer" << endl;
@@ -873,15 +876,17 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
     send(packet, "ifOut");
 
     // ? Qiao pop a packet from overflowBuffer and handle it like an ? upper packet
-    std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
+    if (bounce_randomly_v2) {
+        std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
 
-    if (popFromOverflow && (!overflowBuffer->isEmpty())) {
-        std::cout << "Before popping packet from overflowBuffer" << endl;
-        Packet *packetFromBuffer = overflowBuffer->getPacket(0);
-        std::cout << "popped packet from overflowBuffer" << endl;
-        handleUpperPacket(packetFromBuffer);
-        std::cout << "sent popped packet from overflowBuffer to handleUpperPacket" << endl;
-        overflowBuffer->removePacket(packetFromBuffer);
+        if (popFromOverflow && (!overflowBuffer->isEmpty())) {
+            std::cout << "Before popping packet from overflowBuffer" << endl;
+            Packet *packetFromBuffer = overflowBuffer->getPacket(0);
+            std::cout << "popped packet from overflowBuffer" << endl;
+            handleUpperPacket(packetFromBuffer);
+            std::cout << "sent popped packet from overflowBuffer to handleUpperPacket" << endl;
+            overflowBuffer->removePacket(packetFromBuffer);
+        }
     }
 }
 
