@@ -11,7 +11,6 @@ Define_Module(OverflowBuffer);
 
 void OverflowBuffer::initialize(int stage)
 {
-    /*
     PacketBuffer::initialize(stage);
     
     if (stage == INITSTAGE_LOCAL) {
@@ -24,18 +23,14 @@ void OverflowBuffer::initialize(int stage)
     }
     else if (stage == INITSTAGE_LAST)
         updateDisplayString();
-        */
 }
 
-/*
 bool OverflowBuffer::isOverloaded()
 {
     return (packetCapacity != -1 && getNumPackets() > packetCapacity) ||
            (dataCapacity != b(-1) && getTotalLength() > dataCapacity);
 }
-*/
 
-/*
 void OverflowBuffer::addPacket(Packet *packet)
 {
     Enter_Method("addPacket");
@@ -70,7 +65,6 @@ Packet *OverflowBuffer::getPacket(int index)
         throw cRuntimeError("index %i out of range", index);
     return packets[index];
 }
-*/
 
 
 

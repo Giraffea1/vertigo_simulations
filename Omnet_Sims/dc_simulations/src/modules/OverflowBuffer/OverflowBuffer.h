@@ -14,35 +14,35 @@ namespace queueing {
 // ? use inet_api
 class OverflowBuffer : public PacketBuffer
 {
-  // protected:
-  //   int packetCapacity = -1;
-  //   b dataCapacity = b(-1);
+  protected:
+    int packetCapacity = -1;
+    b dataCapacity = b(-1);
 
-  //   b totalLength = b(0);
-  //   std::vector<Packet *> packets;
+    b totalLength = b(0);
+    std::vector<Packet *> packets;
 
-  //   IPacketDropperFunction *packetDropperFunction = nullptr;
+    IPacketDropperFunction *packetDropperFunction = nullptr;
 
-  // protected:
-  //   virtual void initialize(int stage) override;
+  protected:
+    virtual void initialize(int stage) override;
 
-  //   virtual bool isOverloaded();
+    virtual bool isOverloaded();
 
-  // public:
-  //   virtual int getMaxNumPackets() override { return packetCapacity; }
-  //   virtual int getNumPackets() override { return packets.size(); }
+  public:
+    virtual int getMaxNumPackets() override { return packetCapacity; }
+    virtual int getNumPackets() override { return packets.size(); }
 
-  //   virtual b getMaxTotalLength() override { return dataCapacity; }
-  //   virtual b getTotalLength() override { return totalLength; }
+    virtual b getMaxTotalLength() override { return dataCapacity; }
+    virtual b getTotalLength() override { return totalLength; }
 
-  //   virtual Packet *getPacket(int index) override;
-  //   virtual bool isEmpty() override { return packets.size() == 0; }
+    virtual Packet *getPacket(int index) override;
+    virtual bool isEmpty() override { return packets.size() == 0; }
 
-  //   virtual void addPacket(Packet *packet) override;
-  //   virtual void removePacket(Packet *packet) override;
+    virtual void addPacket(Packet *packet) override;
+    virtual void removePacket(Packet *packet) override;
 
-  //   virtual bool supportsPushPacket(cGate *gate) override { return false; }
-  //   virtual bool supportsPopPacket(cGate *gate) override { return false; }
+    virtual bool supportsPushPacket(cGate *gate) override { return false; }
+    virtual bool supportsPopPacket(cGate *gate) override { return false; }
 };
 
 } // namespace queueing
