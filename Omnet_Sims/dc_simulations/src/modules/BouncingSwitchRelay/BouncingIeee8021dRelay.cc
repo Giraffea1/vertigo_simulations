@@ -29,6 +29,8 @@
 #include "BouncingIeee8021dRelay.h"
 #include "inet/applications/tcpapp/GenericAppMsg_m.h"
 
+#include "inet/queueing/buffer/PacketBuffer.h"
+
 using namespace inet;
 
 Define_Module(BouncingIeee8021dRelay);
@@ -82,7 +84,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
         // Power of N bouncing
 
         // Qiao: initialized the overflow buffer
-        buffer = getModuleFromPar<IPacketBuffer>(par("bufferModule"), this, false);
+        overflowBuffer = getModuleFromPar<IPacketBuffer>(par("bufferModule"), this, false);
 
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
