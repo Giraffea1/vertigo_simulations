@@ -81,7 +81,7 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
      */
 
     // Qiao: Overflow buffer
-    PacketBuffer *overflowBuffer = nullptr;
+    OverflowBuffer *overflowBuffer = nullptr;
 
     bool bounce_randomly_v2;
     bool use_v2_pifo;
