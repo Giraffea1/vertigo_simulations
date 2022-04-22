@@ -37,7 +37,8 @@ OBJS = \
     $O/modules/Augmented_Mac/AugmentedEtherMac.o \
     $O/modules/BouncingSwitchRelay/BouncingIeee8021dRelay.o \
     $O/modules/LSSwitch/LSMACTable/LSMacAddressTable.o \
-    $O/modules/V2/V2PIFO.o
+    $O/modules/V2/V2PIFO.o \
+    $O/modules/OverflowBuffer/OverflowBuffer.o
 
 # Message files
 MSGFILES =
