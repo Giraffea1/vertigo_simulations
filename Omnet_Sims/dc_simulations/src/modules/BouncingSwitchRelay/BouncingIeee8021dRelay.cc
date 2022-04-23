@@ -895,7 +895,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
             std::cout << "Before popping packet from overflowBuffer" << endl;
             Packet *packetFromBuffer = overflowBuffer->getPacket(0);
             std::cout << "popped packet from overflowBuffer" << endl;
-            handleUpperPacket(packetFromBuffer);
+            handlePacketFromOverflowBuffer(packetFromBuffer);
             std::cout << "sent popped packet from overflowBuffer to handleUpperPacket" << endl;
             overflowBuffer->removePacket(packetFromBuffer);
         }
@@ -963,7 +963,218 @@ InterfaceEntry *BouncingIeee8021dRelay::chooseInterface()
     return nullptr;
 }
 
+void BouncingIeee8021dRelay::handlePacketFromOverflowBuffer(Packet *packet)
+{
+    std::cout << "Inside handlePacketFromOverflowBuffer" << endl;
 
+
+    const auto& frame = packet->peekAtFront<EthernetMacHeader>();
+
+    InterfaceReq* interfaceReq = packet->findTag<InterfaceReq>();
+    int interfaceId =
+            interfaceReq == nullptr ? -1 : interfaceReq->getInterfaceId();
+
+    if (interfaceId != -1) {
+        std::cout << "Interfaceid != -1" << endl;
+
+        InterfaceEntry *ie = ifTable->getInterfaceById(interfaceId);
+        chooseDispatchTypeForOverflow(packet, ie);
+    } else if (frame->getDest().isBroadcast()) {    // broadcast address
+        broadcast(packet, -1);
+    } else {
+        std::list<int> outInterfaceId = macTable->getInterfaceIdForAddress(frame->getDest());
+        // Not known -> broadcast
+        if (outInterfaceId.size() == 0) {
+            EV_DETAIL << "Destination address = " << frame->getDest()
+                                      << " unknown, broadcasting frame " << frame
+                                      << endl;
+
+            throw cRuntimeError("2)Destination address not known. Broadcasting the frame. For DCs based on you're setting this shouldn't happen.");
+            broadcast(packet, -1);
+        } else {
+                std::cout << "Inside last option of handleUpperPacket" << endl;
+
+            InterfaceEntry *ie = ifTable->getInterfaceById(interfaceId);
+            chooseDispatchTypeForOverflow(packet, ie);
+        }
+    }
+}
+
+void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, InterfaceEntry *ie){
+    std::cout << "Inside chooseDispatchTypeForOverflow" << endl;
+
+    const auto& frame = packet->peekAtFront<EthernetMacHeader>();
+    std::list<int> destInterfaceIds = macTable->getInterfaceIdForAddress(frame->getDest());
+    // ? when they would be multiple destInterfaceIds
+    int portNum = destInterfaceIds.size();
+    Chunk::enableImplicitChunkSerialization = true;
+    std::string protocol = packet->getName();
+    bool is_packet_arp_or_broadcast = (protocol.find("arp") != std::string::npos) || (frame->getDest().isBroadcast());
+    std::cout << "chooseDispatchTypeForOverflow, portNum" << portNum << endl;
+
+    // reduce the ttl
+    if (!is_packet_arp_or_broadcast){
+        EV << "SEPEHR: Should reduce packet's ttl." << endl;
+        b packetPosition = packet->getFrontOffset();
+        packet->setFrontIteratorPosition(b(0));
+        auto phyHeader = packet->removeAtFront<EthernetPhyHeader>();
+        auto ethHeader = packet->removeAtFront<EthernetMacHeader>();
+        auto ipHeader = packet->removeAtFront<Ipv4Header>();
+        short ttl = ipHeader->getTimeToLive() - 1;
+        if (ttl <= 0) {
+            EV << "ttl is " << ttl << ". dropping the packet!" << endl;
+            light_in_relay_packet_drop_counter++;
+            delete packet;
+            return;
+        }
+        EV << "SEPEHR: packet's old ttl is: " << ipHeader->getTimeToLive() << " and it's new ttl is: " << ttl << endl;
+        ipHeader->setTimeToLive(ttl);
+        packet->insertAtFront(ipHeader);
+        packet->insertAtFront(ethHeader);
+        packet->insertAtFront(phyHeader);
+        packet->setFrontIteratorPosition(packetPosition);
+    }
+
+    if (!is_packet_arp_or_broadcast){
+        InterfaceEntry *ie2;
+
+        if (use_power_of_n_lb) {
+            //forward the packet towards destination using power of n choices
+            // Considering ports towards servers as well
+            // power of N LB
+
+            EV << "Finding random interface for packet " << packet->str() << endl;
+            ie2 = find_interface_to_fw_randomly_power_of_n(packet, true);
+            if (ie2 == nullptr)
+                ie2 = ie;
+        }
+        else if (use_ecmp && portNum > 1) {
+            // ECMP
+            destInterfaceIds.sort();
+            b packetPosition = packet->getFrontOffset();
+            packet->setFrontIteratorPosition(b(0));
+            auto phyHeader = packet->removeAtFront<EthernetPhyHeader>();
+            auto ethHeader = packet->removeAtFront<EthernetMacHeader>();
+            auto ipHeader = packet->removeAtFront<Ipv4Header>();
+            auto tcpHeader = packet->peekAtFront<tcp::TcpHeader>();
+            EV << "S&S: The flow info is: ( src_ip: " << ipHeader->getSourceAddress() << ", dest_ip: " << ipHeader->getDestinationAddress() << ", src_port: " << tcpHeader->getSourcePort() << ", dest_port: " << tcpHeader->getDestinationPort() << " )" << endl;
+            EV << "SEPEHR: Switch IS using ECMP for this packet!" << endl;
+            std::string switch_name = getParentModule()->getFullPath();
+            std::string header_info = ipHeader->getSourceAddress().str() + ipHeader->getDestinationAddress().str() +
+                    std::to_string(tcpHeader->getSourcePort()) + std::to_string(tcpHeader->getDestinationPort()) + switch_name;
+            unsigned long header_info_hash = header_hash(header_info);
+            EV << "There are " << portNum << " ports and header hash is " << header_info_hash << endl;
+            int outputPortNum;
+            outputPortNum = header_info_hash % portNum;
+            EV << "SEPEHR: output port number is: " << outputPortNum << endl;
+            std::list<int>::iterator it = destInterfaceIds.begin();
+            std::advance(it, outputPortNum);
+            EV << "SEPEHR: output interface ID is: " << *it << endl;
+            packet->insertAtFront(ipHeader);
+            packet->insertAtFront(ethHeader);
+            packet->insertAtFront(phyHeader);
+            packet->setFrontIteratorPosition(packetPosition);
+            ie2 = ifTable->getInterfaceById(*it);
+        } else {
+            ie2 = ie;
+        }
+        dispatchOverflowPacket(packet, ie2);
+    }
+    else {
+        dispatch(packet, ie);
+    }
+}
+
+void BouncingIeee8021dRelay::dispatchOverflowPacket(Packet *packet, InterfaceEntry *ie)
+{
+    std::cout << "Inside dispatchOverflowPacket" << endl;
+
+    if (ie != nullptr) {
+        b position = packet->getFrontOffset();
+        packet->setFrontIteratorPosition(b(0));
+        auto phy_header_temp = packet->removeAtFront<EthernetPhyHeader>();
+        auto mac_header_temp = packet->removeAtFront<EthernetMacHeader>();
+        mac_header_temp->setOriginal_interface_id(ie->getInterfaceId());
+        packet->insertAtFront(mac_header_temp);
+        packet->insertAtFront(phy_header_temp);
+        packet->setFrontIteratorPosition(position);
+    }
+
+    const auto& frame = packet->peekAtFront<EthernetMacHeader>();
+    std::string switch_name = getParentModule()->getFullName();
+    b packet_length = b(packet->getBitLength());
+
+    std::string module_path_string;
+    InterfaceEntry *ie2 = nullptr;
+
+    if (!frame->getDest().isBroadcast()) {
+        // If there is enough space on the chosen port simply forward it
+        module_path_string = switch_name + ".eth[" + std::to_string(ie->getIndex()) + "].mac";
+        EV << "The chosen port path is " << module_path_string << endl;
+        AugmentedEtherMac *mac_temp = check_and_cast<AugmentedEtherMac *>(getModuleByPath(module_path_string.c_str()));
+        std::string queue_full_path = "";
+
+        if (mac_temp->is_queue_full(packet_length, queue_full_path)) {
+            if (bounce_randomly) {
+                // Using DIBS --> Randomly bouncing to a not full switch port
+                ie2 = find_interface_to_bounce_randomly(packet);
+            }
+            else if (bounce_randomly_v2) {
+                // Bounce the packet to source using power of n choices.
+                // Not considering ports towards servers
+                EV << "Frames src is " << frame->getSrc() << " and frame's dst is " << frame->getDest() << endl;
+                find_interface_to_bounce_randomly_v2(packet, false, ie);
+                return;
+            } else {
+                ie2 = nullptr;
+                EV << "No bouncing method chosen! Normally drop the packet!" << endl;
+            }
+            if (ie2 == nullptr && use_v2_pifo) {
+                // if this is true, we handle the drop in the mac layer and not the relay unit
+                ie2 = ie;
+            }
+            if (ie2 == nullptr) {
+//                emit(feedBackPacketDroppedSignal, int(frame->getIs_bursty()));
+//                emit(feedBackPacketDroppedPortSignal, ie->getIndex());
+                light_in_relay_packet_drop_counter++;
+                delete packet;
+                return;
+            }
+        } else {
+            ie2 = ie;
+            // Qiao: when there is space in chosen port, we would pop from the overflow buffer later in the end
+            if (bounce_randomly_v2) {
+                popFromOverflow = true;
+                std::cout << "setting popFromOverflow to true" << endl;
+            }
+        }
+    } else {
+        ie2 = ie;
+    }
+
+    if (ie2->getInterfaceId() != ie->getInterfaceId()) {
+        EV << "The output interface has changed as a result of bouncing." << endl;
+        emit(feedBackPacketGeneratedSignal, packet->getId());
+    }
+
+    module_path_string = switch_name + ".eth[" + std::to_string(ie2->getIndex()) + "].mac";
+    AugmentedEtherMac *mac = check_and_cast<AugmentedEtherMac *>(getModuleByPath(module_path_string.c_str()));
+    auto mac_header = packet->peekAtFront<EthernetMacHeader>();
+    mac->add_on_the_way_packet(packet_length);
+
+    EV << "Sending frame " << packet << " on output interface " << ie2->getFullName() << " with destination = " << frame->getDest() << endl;
+
+    numDispatchedNonBPDUFrames++;
+    auto oldPacketProtocolTag = packet->removeTag<PacketProtocolTag>();
+    packet->clearTags();
+    auto newPacketProtocolTag = packet->addTag<PacketProtocolTag>();
+    *newPacketProtocolTag = *oldPacketProtocolTag;
+    delete oldPacketProtocolTag;
+    packet->addTag<InterfaceReq>()->setInterfaceId(ie2->getInterfaceId());
+    packet->trim();
+    emit(packetSentToLowerSignal, packet);
+    send(packet, "ifOut");
+}
 
 void BouncingIeee8021dRelay::finish()
 {

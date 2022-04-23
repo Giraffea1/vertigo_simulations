@@ -138,8 +138,11 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
 
     void handleUpperPacket(Packet *packet) override;
     void handleLowerPacket(Packet *packet) override;
+    void handlePacketFromOverflowBuffer(Packet *packet);
 
     void dispatch(Packet *packet, InterfaceEntry *ie);
+    void dispatchOverflowPacket(Packet *packet, InterfaceEntry *ie);
+
     void learn(MacAddress srcAddr, int arrivalInterfaceId);
     void broadcast(Packet *packet, int arrivalInterfaceId);
 
@@ -148,6 +151,7 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
     //@{ For ECMP
     void chooseDispatchType(Packet *packet, InterfaceEntry *ie);
     //@}
+    void chooseDispatchTypeForOverflow(Packet *packet, InterfaceEntry *ie);
 
     //@{ For lifecycle
     virtual void start();
