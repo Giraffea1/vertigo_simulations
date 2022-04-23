@@ -175,6 +175,9 @@ void BouncingIeee8021dRelay::handleLowerPacket(Packet *packet)
 // ?upperpacket meaning from uppder layer
 void BouncingIeee8021dRelay::handleUpperPacket(Packet *packet)
 {
+    std::cout << "Inside handleUpperPacket" << endl;
+
+
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
 
     InterfaceReq* interfaceReq = packet->findTag<InterfaceReq>();
@@ -182,6 +185,8 @@ void BouncingIeee8021dRelay::handleUpperPacket(Packet *packet)
             interfaceReq == nullptr ? -1 : interfaceReq->getInterfaceId();
 
     if (interfaceId != -1) {
+        std::cout << "Interfaceid != -1" << endl;
+
         InterfaceEntry *ie = ifTable->getInterfaceById(interfaceId);
         chooseDispatchType(packet, ie);
     } else if (frame->getDest().isBroadcast()) {    // broadcast address
@@ -197,6 +202,8 @@ void BouncingIeee8021dRelay::handleUpperPacket(Packet *packet)
             throw cRuntimeError("2)Destination address not known. Broadcasting the frame. For DCs based on you're setting this shouldn't happen.");
             broadcast(packet, -1);
         } else {
+                std::cout << "Inside last option of handleUpperPacket" << endl;
+
             InterfaceEntry *ie = ifTable->getInterfaceById(interfaceId);
             chooseDispatchType(packet, ie);
         }
@@ -366,6 +373,8 @@ void BouncingIeee8021dRelay::handleAndDispatchFrame(Packet *packet)
 }
 
 void BouncingIeee8021dRelay::chooseDispatchType(Packet *packet, InterfaceEntry *ie){
+    std::cout << "Inside chooseDispatchType" << endl;
+
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
     std::list<int> destInterfaceIds = macTable->getInterfaceIdForAddress(frame->getDest());
     // ? when they would be multiple destInterfaceIds
@@ -373,6 +382,7 @@ void BouncingIeee8021dRelay::chooseDispatchType(Packet *packet, InterfaceEntry *
     Chunk::enableImplicitChunkSerialization = true;
     std::string protocol = packet->getName();
     bool is_packet_arp_or_broadcast = (protocol.find("arp") != std::string::npos) || (frame->getDest().isBroadcast());
+    std::cout << "ChooseDispatchType, portNum" << portNum << endl;
 
     // reduce the ttl
     if (!is_packet_arp_or_broadcast){
@@ -787,6 +797,8 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
 
 void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
 {
+    // std::cout << "Inside dispatch" << endl;
+
     if (ie != nullptr) {
         b position = packet->getFrontOffset();
         packet->setFrontIteratorPosition(b(0));
@@ -877,7 +889,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
 
     // ? Qiao pop a packet from overflowBuffer and handle it like an ? upper packet
     if (bounce_randomly_v2) {
-        std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
+        // std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
 
         if (popFromOverflow && (!overflowBuffer->isEmpty())) {
             std::cout << "Before popping packet from overflowBuffer" << endl;
@@ -950,6 +962,8 @@ InterfaceEntry *BouncingIeee8021dRelay::chooseInterface()
 
     return nullptr;
 }
+
+
 
 void BouncingIeee8021dRelay::finish()
 {

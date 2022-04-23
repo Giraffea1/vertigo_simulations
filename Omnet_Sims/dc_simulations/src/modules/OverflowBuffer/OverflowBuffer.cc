@@ -22,18 +22,24 @@ bool OverflowBuffer::isOverloaded()
 
 void OverflowBuffer::addPacket(Packet *packet)
 {
+    std::cout << "Inside addPacket" << endl;
     Enter_Method("addPacket");
     EV_INFO << "Adding packet " << packet->getName() << " to the buffer.\n";
+    std::cout << "Trying Adding packet " << packet->getName() <<endl;
     emit(packetAddedSignal, packet);
     totalLength += packet->getTotalLength();
+    std::cout << "Before push_back" <<endl;
     packets.push_back(packet);
+    std::cout << "After push_back, packets size: " << packets.size() <<endl;
     if (isOverloaded()) {
         if (packetDropperFunction != nullptr)
             packetDropperFunction->dropPackets(this);
         else
             throw cRuntimeError("Buffer is overloaded but packet dropper function is not specified");
     }
-    updateDisplayString();
+    std::cout << "After check overloaded" << endl;
+    // updateDisplayString();
+    std::cout << "After update displaystring" <<endl;
 }
 
 void OverflowBuffer::removePacket(Packet *packet)
