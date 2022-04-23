@@ -373,7 +373,7 @@ void BouncingIeee8021dRelay::handleAndDispatchFrame(Packet *packet)
 }
 
 void BouncingIeee8021dRelay::chooseDispatchType(Packet *packet, InterfaceEntry *ie){
-    std::cout << "Inside chooseDispatchType" << endl;
+    //std::cout << "Inside chooseDispatchType" << endl;
 
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
     std::list<int> destInterfaceIds = macTable->getInterfaceIdForAddress(frame->getDest());
@@ -382,7 +382,6 @@ void BouncingIeee8021dRelay::chooseDispatchType(Packet *packet, InterfaceEntry *
     Chunk::enableImplicitChunkSerialization = true;
     std::string protocol = packet->getName();
     bool is_packet_arp_or_broadcast = (protocol.find("arp") != std::string::npos) || (frame->getDest().isBroadcast());
-    std::cout << "ChooseDispatchType, portNum" << portNum << endl;
 
     // reduce the ttl
     if (!is_packet_arp_or_broadcast){
@@ -857,7 +856,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
             // Qiao: when there is space in chosen port, we would pop from the overflow buffer later in the end
             if (bounce_randomly_v2) {
                 popFromOverflow = true;
-                std::cout << "setting popFromOverflow to true" << endl;
+                //std::cout << "setting popFromOverflow to true" << endl;
             }
         }
     } else {
@@ -1014,31 +1013,46 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
 
     // reduce the ttl
     if (!is_packet_arp_or_broadcast){
+        std::cout << "Inside first !is_packet_arp_or_broadcast" << endl;
         EV << "SEPEHR: Should reduce packet's ttl." << endl;
         b packetPosition = packet->getFrontOffset();
         packet->setFrontIteratorPosition(b(0));
+        std::cout << "1020" << endl;
         auto phyHeader = packet->removeAtFront<EthernetPhyHeader>();
+                std::cout << "1022" << endl;
         auto ethHeader = packet->removeAtFront<EthernetMacHeader>();
+                std::cout << "1024" << endl;
         auto ipHeader = packet->removeAtFront<Ipv4Header>();
+                std::cout << "1026" << endl;
         short ttl = ipHeader->getTimeToLive() - 1;
+        std::cout << "1025" << endl;
+
         if (ttl <= 0) {
             EV << "ttl is " << ttl << ". dropping the packet!" << endl;
             light_in_relay_packet_drop_counter++;
             delete packet;
             return;
         }
+                std::cout << "1033" << endl;
+
         EV << "SEPEHR: packet's old ttl is: " << ipHeader->getTimeToLive() << " and it's new ttl is: " << ttl << endl;
         ipHeader->setTimeToLive(ttl);
         packet->insertAtFront(ipHeader);
         packet->insertAtFront(ethHeader);
+                std::cout << "1039" << endl;
+
         packet->insertAtFront(phyHeader);
         packet->setFrontIteratorPosition(packetPosition);
     }
 
     if (!is_packet_arp_or_broadcast){
+        std::cout << "Inside second !is_packet_arp_or_broadcast" << endl;
+
         InterfaceEntry *ie2;
 
         if (use_power_of_n_lb) {
+
+            std::cout << "Inside use pwr of n" << endl;
             //forward the packet towards destination using power of n choices
             // Considering ports towards servers as well
             // power of N LB
@@ -1049,6 +1063,9 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
                 ie2 = ie;
         }
         else if (use_ecmp && portNum > 1) {
+            std::cout << "Inside use ECMP" << endl;
+
+
             // ECMP
             destInterfaceIds.sort();
             b packetPosition = packet->getFrontOffset();
@@ -1076,12 +1093,13 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
             packet->setFrontIteratorPosition(packetPosition);
             ie2 = ifTable->getInterfaceById(*it);
         } else {
+            std::cout << "Inside ie2=ie" << endl;
             ie2 = ie;
         }
         dispatchOverflowPacket(packet, ie2);
     }
     else {
-        dispatch(packet, ie);
+        dispatchOverflowPacket(packet, ie);
     }
 }
 
