@@ -781,6 +781,19 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         EV << "Forwarding the ejected packet " << packet->str() << endl;
         ejected_packets.pop_front();
 
+// test packet issue        
+        b position = packet->getFrontOffset();
+        packet->setFrontIteratorPosition(b(0));
+                        std::cout << "Be 1st removeatfront" << endl;
+        auto phy_header_temp = packet->removeAtFront<EthernetPhyHeader>();
+                                std::cout << "Be 2nd removeatfront" << endl;
+        auto mac_header_temp = packet->removeAtFront<EthernetMacHeader>();
+        mac_header_temp->setOriginal_interface_id(ie->getInterfaceId());
+        packet->insertAtFront(mac_header_temp);
+        packet->insertAtFront(phy_header_temp);
+        packet->setFrontIteratorPosition(position);
+
+
         if (overflowBuffer != nullptr) {
             // Qiao: add packet to the overflow queue if the buffer is not overloaded
             std::cout << "Try to add packet to buffer" << endl;
@@ -1010,8 +1023,8 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
     std::string protocol = packet->getName();
     bool is_packet_arp_or_broadcast = (protocol.find("arp") != std::string::npos) || (frame->getDest().isBroadcast());
     std::cout << "chooseDispatchTypeForOverflow, portNum" << portNum << endl;
-
     // reduce the ttl
+    /*
     if (!is_packet_arp_or_broadcast){
         std::cout << "Inside first !is_packet_arp_or_broadcast" << endl;
         EV << "SEPEHR: Should reduce packet's ttl." << endl;
@@ -1044,6 +1057,7 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
         packet->insertAtFront(phyHeader);
         packet->setFrontIteratorPosition(packetPosition);
     }
+    */
 
     if (!is_packet_arp_or_broadcast){
         std::cout << "Inside second !is_packet_arp_or_broadcast" << endl;
@@ -1106,24 +1120,28 @@ void BouncingIeee8021dRelay::chooseDispatchTypeForOverflow(Packet *packet, Inter
 void BouncingIeee8021dRelay::dispatchOverflowPacket(Packet *packet, InterfaceEntry *ie)
 {
     std::cout << "Inside dispatchOverflowPacket" << endl;
-
     if (ie != nullptr) {
+                std::cout << "1111" << endl;
         b position = packet->getFrontOffset();
         packet->setFrontIteratorPosition(b(0));
-        auto phy_header_temp = packet->removeAtFront<EthernetPhyHeader>();
+                        std::cout << "Before 1st removeatfront" << endl;
+//        auto phy_header_temp = packet->removeAtFront<EthernetPhyHeader>();
+                                std::cout << "Before 2nd removeatfront" << endl;
         auto mac_header_temp = packet->removeAtFront<EthernetMacHeader>();
         mac_header_temp->setOriginal_interface_id(ie->getInterfaceId());
         packet->insertAtFront(mac_header_temp);
-        packet->insertAtFront(phy_header_temp);
+//        packet->insertAtFront(phy_header_temp);
         packet->setFrontIteratorPosition(position);
     }
-
+                std::cout << "1122" << endl;
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
+                    std::cout << "1125" << endl;
     std::string switch_name = getParentModule()->getFullName();
     b packet_length = b(packet->getBitLength());
 
     std::string module_path_string;
     InterfaceEntry *ie2 = nullptr;
+                std::cout << "1131" << endl;
 
     if (!frame->getDest().isBroadcast()) {
         // If there is enough space on the chosen port simply forward it
