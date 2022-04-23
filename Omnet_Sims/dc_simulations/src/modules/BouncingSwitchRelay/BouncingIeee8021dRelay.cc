@@ -1142,11 +1142,6 @@ void BouncingIeee8021dRelay::dispatchOverflowPacket(Packet *packet, InterfaceEnt
             }
         } else {
             ie2 = ie;
-            // Qiao: when there is space in chosen port, we would pop from the overflow buffer later in the end
-            if (bounce_randomly_v2) {
-                popFromOverflow = true;
-                std::cout << "setting popFromOverflow to true" << endl;
-            }
         }
     } else {
         ie2 = ie;
