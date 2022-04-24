@@ -658,7 +658,7 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
     if (num_packets_to_eject < 0) {
         // deflect packet itself
         EV << "Adding the main packets to the list to be bounced" << endl;
-        std::cout << "This is an incoming packet with phyheader to be pushed into ejected_packets: " << packet->str() << endl;
+        std::cout << "This is an incoming packet to be pushed into ejected_packets: " << packet->str() << endl;
         ejected_packets.push_back(packet);
     } else {
         // eject packets to make room for the main packet
@@ -1019,7 +1019,7 @@ void BouncingIeee8021dRelay::handlePacketFromOverflowBuffer(Packet *packet)
             broadcast(packet, -1);
         } else {
                 std::cout << "Inside last option of handleUpperPacket" << endl;
-
+                std::cout << "Here is the ifTable" << ifTable << endl;
             InterfaceEntry *ie = ifTable->getInterfaceById(interfaceId);
             chooseDispatchTypeForOverflow(packet, ie);
         }
