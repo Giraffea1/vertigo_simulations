@@ -30,7 +30,7 @@ void OverflowBuffer::addPacket(Packet *packet)
     totalLength += packet->getTotalLength();
     std::cout << "Before push_back" <<endl;
     packets.push_back(packet);
-    std::cout << "After push_back, packets size: " << packets.size() <<endl;
+    std::cout << "After push_back, buffer size: " << packets.size() <<endl;
     if (isOverloaded()) {
         if (packetDropperFunction != nullptr)
             packetDropperFunction->dropPackets(this);
@@ -44,14 +44,20 @@ void OverflowBuffer::addPacket(Packet *packet)
 
 void OverflowBuffer::removePacket(Packet *packet)
 {
+        std::cout << "Entered removePacket" << endl;
     Enter_Method("removePacket");
     EV_INFO << "Removing packet " << packet->getName() << " from the buffer.\n";
+        std::cout << "Removing packet " << packet->getName() << endl;
     emit(packetRemovedSignal, packet);
+        std::cout << "52" << endl;
     totalLength -= packet->getTotalLength();
     packets.erase(find(packets.begin(), packets.end(), packet));
-    updateDisplayString();
-    ICallback *callback = check_and_cast<ICallback *>(packet->getOwner()->getOwner());
-    callback->handlePacketRemoved(packet);
+            std::cout << "55" << endl;
+    //updateDisplayString();
+            std::cout << "57" << endl;
+    // ICallback *callback = check_and_cast<ICallback *>(packet->getOwner()->getOwner());
+    // callback->handlePacketRemoved(packet);
+            std::cout << "End of removePacket" << endl;
 }
 
 Packet *OverflowBuffer::getPacket(int index)

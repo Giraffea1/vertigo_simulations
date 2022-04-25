@@ -1,7 +1,7 @@
 # Cloud Computing Class Project
 This is a revised version of Vertigo with the following differences:
 
-Instead of deflecting packets, we will be implementing a overflow buffer queue where packets will be stored temporarily. The overflow queue will pop out the packets in a preset time interval.
+Instead of deflecting packets, we will be implementing a overflow buffer queue where packets will be stored temporarily. The overflow queue will pop out a packet when there is an indication of less traffic, which is trigered when another packet disptached into a non full queue.
 
 
 # _________________ORIGINAL SIMULATION_____________________
