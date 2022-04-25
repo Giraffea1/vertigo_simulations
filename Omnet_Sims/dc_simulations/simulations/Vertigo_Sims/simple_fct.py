@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 LEAF_SPINE = 0
 FAT_TREE = 1
 TOPOLOGY = LEAF_SPINE
-CATEGORIES = ["dctcp_ecmp", "dctcp_drill", "dctcp_dibs", "dctcp_vertigo"]
+CATEGORIES = ["dctcp_ecmp", "dctcp_drill", "dctcp_dibs", "dctcp_overflow_buffer"]
 
 TTLS = [250]    # TTL values
 RANDOM_POWER_FACTOR = [2]   # Power-of-N choices
