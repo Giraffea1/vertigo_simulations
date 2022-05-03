@@ -1,4 +1,11 @@
-# Vertigo Omnet++ simulation files
+# Cloud Computing Class Project
+This is a revised version of Vertigo design with an overflow buffer instead of deflection:
+
+Instead of deflecting packets, we will be implementing an overflow buffer queue where packets will be stored temporarily. The overflow queue will pop out a packet when there is an indication of less traffic, which is trigered when another packet is disptached into a non full queue.
+
+# _________________Re-producing the simulation results____________________
+The steps to reproduce are the same as the original Vertigo simulation, we have edited on the original scripts, so you can just use run_simple_1g.sh to run a small scale simulation. The below are the steps to reproduce the results(same as origin repo except for the repo address for vertigo_simulation).
+
 
 ## Re-producing the simulation results
 
@@ -66,7 +73,7 @@ make
 To clone the repository, run the following script:
 
 ```
-git clone https://github.com/hopnets/vertigo_simulations.git
+git clone https://github.com/Giraffea1/vertigo_simulations/tree/useOverflowBuffer
 ```
 
 ### Step 4: Building the project
@@ -170,32 +177,4 @@ To view the plotted figures for small simulations, `Jupyter notebook` is require
  
  You can optionally use `--ip x.x.x.x` flag on a public server machine, where x.x.x.x is the public ip address of the server.
  The notebook compares the small scale simulation results with the large-scale results reported in the main paper.
-
-
-**Running large-scale simulations**
-
-The config files for large scale simulations can be used for evaluating Vertigo, DIBS, ECMP, and DRILL while using TCP, DCTCP, and Swift as the transport protocol. Every scenario with these configurations takes 2 to 3 weeks to complete. To run the large scale simulations, first make sure that you are in the right directory ("vertigo_simulations/Omnet_Sims/dc_simulations/simulations/Vertigo_Sims") and then run the following command to download the distribution files:
-
-```
-bash download_dist_files.sh
-```
-
-After the distribution files are downloaded, you can use the provided bash scripts to run the large scale simulations for different incast arrival rates (dqps), flow sizes, and scales. Additionally, you can run the simulations for various degrees of burstiness, fat-tree topology, and component analysis. The list of the provided bash scripts is as below:
-* **Different arrival rates with 15%, 25%, 50%, and 75% background load**
-  * run_15_bg_dqps.sh (uses ```omnetpp_15_bg_dqps.ini```)
-  * run_25_bg_dqps.sh (uses ```omnetpp_25_bg_dqps.ini```)
-  * run_50_bg_dqps.sh (uses ```omnetpp_50_bg_dqps.ini```)
-  * run_75_bg_dqps.sh (uses ```omnetpp_75_bg_dqps.ini```)
-* **Different scales with 50% background load**
-  * run_50_bg_dscale.sh (uses ```omnetpp_50_bg_dscale.ini```)
-* **Different flow size with 50% background load**
-  * run_50_bg_dfsize.sh (uses ```omnetpp_50_bg_dfsize.ini```)
-* **Different degrees of burstiness with 80% constant load**
-  * run_80_constant_dburstiness.sh (uses ```omnetpp_80_constant_dburstiness.ini```)
-* **Fat-tree topology under different arrival rates and 50% background load**
-  * run_fattree.sh (uses ```omnetpp_fattree.ini```)
-* **Component analysis: effect of boosting factor in Vertigo's performance (boosting factor = 0, 2, 4, 8)**
-  * run_boosting.sh (uses ```boosting.ini```)
-* **Component analysis: effect of SRPT scheduling, packet deflection, and ordering component in Vertigo's performance**
-  * run_deflection_and_ordering.sh (uses ```deflection_and_ordering.ini```)
 

@@ -28,6 +28,10 @@
 #include "../LSSwitch/LSMACTable/LSIMacAddressTable.h"
 #include "../Augmented_Mac/AugmentedEtherMac.h"
 #include "../V2/V2PIFO.h"
+#include "inet/queueing/contract/IPacketBuffer.h"
+#include "../OverflowBuffer/OverflowBuffer.h"
+
+#include "inet/queueing/buffer/PacketBuffer.h"
 
 using namespace inet;
 
@@ -75,6 +79,10 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
     /*
      * V2
      */
+
+    // Qiao: Overflow buffer
+    OverflowBuffer *overflowBuffer = nullptr;
+
     bool bounce_randomly_v2;
     bool use_v2_pifo;
 
@@ -130,8 +138,11 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
 
     void handleUpperPacket(Packet *packet) override;
     void handleLowerPacket(Packet *packet) override;
+    void handlePacketFromOverflowBuffer(Packet *packet);
 
     void dispatch(Packet *packet, InterfaceEntry *ie);
+    void dispatchOverflowPacket(Packet *packet, InterfaceEntry *ie);
+
     void learn(MacAddress srcAddr, int arrivalInterfaceId);
     void broadcast(Packet *packet, int arrivalInterfaceId);
 
@@ -140,6 +151,7 @@ class BouncingIeee8021dRelay : public LayeredProtocolBase
     //@{ For ECMP
     void chooseDispatchType(Packet *packet, InterfaceEntry *ie);
     //@}
+    void chooseDispatchTypeForOverflow(Packet *packet, InterfaceEntry *ie);
 
     //@{ For lifecycle
     virtual void start();
