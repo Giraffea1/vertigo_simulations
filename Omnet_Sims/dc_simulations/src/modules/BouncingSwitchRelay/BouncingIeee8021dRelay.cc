@@ -54,7 +54,6 @@ BouncingIeee8021dRelay::~BouncingIeee8021dRelay()
 void BouncingIeee8021dRelay::initialize(int stage)
 {
     LayeredProtocolBase::initialize(stage);
-
     if (stage == INITSTAGE_LOCAL) {
         // statistics
         numDispatchedBDPUFrames = numDispatchedNonBPDUFrames = numDeliveredBDPUsToSTP = 0;
@@ -85,9 +84,10 @@ void BouncingIeee8021dRelay::initialize(int stage)
 
         // Qiao: initialized the overflow buffer
         overflowBuffer = new OverflowBuffer();
-
+        overflowBuffer->setLenCapacity(40000);
         // // std::cout << "This is the overflowBuffer just initiated: " << overflowBuffer << endl;
-        // // std::cout << "This is the overflowBuffer capacity: " << overflowBuffer->getMaxNumPackets() << endl;
+        std::cout << "Boucing initializing, overflowBuffer packet capacity: " << overflowBuffer->getMaxNumPackets() << endl;
+        std::cout << "Boucing initializing, overflowBuffer length capacity: " << overflowBuffer->getMaxTotalLength() << endl;
 
         bounce_randomly_v2 = getAncestorPar("bounce_randomly_v2");
         use_v2_pifo = getAncestorPar("use_v2_pifo");
@@ -593,7 +593,7 @@ InterfaceEntry* BouncingIeee8021dRelay::find_interface_to_fw_randomly_power_of_n
 }
 
 void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet, bool consider_servers, InterfaceEntry *ie2) {
-
+    std::cout << "Inside bounce_ramd_v2 function" << endl;
     // eject the packets to create room for packet
     // we don't filter out the ports with available capacity
     std::string module_path_string;
@@ -661,7 +661,7 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
     if (num_packets_to_eject < 0) {
         // deflect packet itself
         EV << "Adding the main packets to the list to be bounced" << endl;
-        // std::cout << "This is an incoming packet to be pushed into ejected_packets: " << packet->str() << endl;
+        std::cout << "This is an incoming packet to be pushed into ejected_packets: " << packet->str() << endl;
         ejected_packets.push_back(packet);
     } else {
         // eject packets to make room for the main packet
@@ -792,7 +792,7 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
     }
     */
     // Qiao: send the ejectedPackets to overflow buffer
-    // std::cout << "Pushing packets to buffer portion!" << endl;
+    std::cout << "Pushing packets to buffer portion!" << endl;
 
     while (ejected_packets.size() > 0){
         auto packet = ejected_packets.front();
@@ -806,24 +806,15 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
         delete oldPacketProtocolTag;
         packet->addTag<InterfaceReq>()->setInterfaceId(ie2->getInterfaceId());
         packet->trim();
-// test packet issue        
-        // b position = packet->getFrontOffset();
-        // packet->setFrontIteratorPosition(b(0));
-        //     // std::cout << "Be 1st removeatfront" << endl;
-        //     // std::cout << "Be 2nd removeatfront" << endl;
-        // auto mac_header_temp = packet->removeAtFront<EthernetMacHeader>();
-        // mac_header_temp->setOriginal_interface_id(ie->getInterfaceId());
-        // packet->insertAtFront(mac_header_temp);
-        // packet->setFrontIteratorPosition(position);
+
 
         if (overflowBuffer != nullptr) {
             // Qiao: add packet to the overflow queue if the buffer is not overloaded
             // std::cout << "Try to add packet to buffer" << endl;
             overflowBuffer->addPacket(packet);
-            // std::cout << "added packet to buffer" << endl;
         } else {
             // drop packet if there's no buffer
-            // std::cout << "deleting packet " << packet->getName() << " because there is no buffer" << endl;
+            std::cout << "deleting packet " << packet->getName() << " because there is no buffer" << endl;
             delete packet;
         }
     }
@@ -831,7 +822,6 @@ void BouncingIeee8021dRelay::find_interface_to_bounce_randomly_v2(Packet *packet
 
 void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
 {
-    // // std::cout << "Inside dispatch" << endl;
 
     if (ie != nullptr) {
         b position = packet->getFrontOffset();
@@ -861,6 +851,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
         std::string queue_full_path = "";
 
         if (mac_temp->is_queue_full(packet_length, queue_full_path)) {
+            std::cout << "Queue if full, packet: " << packet->str() << endl;
             if (bounce_randomly) {
                 // Using DIBS --> Randomly bouncing to a not full switch port
                 ie2 = find_interface_to_bounce_randomly(packet);
@@ -868,6 +859,7 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
             else if (bounce_randomly_v2) {
                 // Bounce the packet to source using power of n choices.
                 // Not considering ports towards servers
+                std::cout << "Current buffer: " << overflowBuffer->getTotalLength() * 100.0 / overflowBuffer->getMaxTotalLength() << "%" << endl;
                 EV << "Frames src is " << frame->getSrc() << " and frame's dst is " << frame->getDest() << endl;
                 find_interface_to_bounce_randomly_v2(packet, false, ie);
                 return;
@@ -921,19 +913,20 @@ void BouncingIeee8021dRelay::dispatch(Packet *packet, InterfaceEntry *ie)
     emit(packetSentToLowerSignal, packet);
     send(packet, "ifOut");
 
-    // ? Qiao pop a packet from overflowBuffer and handle it like an ? upper packet
+    // Qiao pop a packet from overflowBuffer and handle it like an normal incoming packet
     if (bounce_randomly_v2) {
-        // // std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
+        // std::cout << "Is popFromOverflow is set to true: " << popFromOverflow << ", is buffer empty? " << overflowBuffer->isEmpty() << endl;
 
         if (popFromOverflow && (!overflowBuffer->isEmpty())) {
-            // std::cout << "Before popping packet from overflowBuffer" << endl;
+            std::cout << "Before removing packet from overflowBuffer, buffer size: " << overflowBuffer->getTotalLength() << endl;
             Packet *packetFromBuffer = overflowBuffer->getPacket(0);
             // std::cout << "popped packet from overflowBuffer" << endl;
             handlePacketFromOverflowBuffer(packetFromBuffer);
             // std::cout << "After handlePacketFromOverflowBuffer" << endl;
             overflowBuffer->removePacket(packetFromBuffer);
             // std::cout << "After Remove packet from buffer" << endl;
- 
+            std::cout << "After removing packet from overflowBuffer, buffer size: " << overflowBuffer->getTotalLength() << endl;
+
         }
     }
 }
@@ -1002,19 +995,7 @@ InterfaceEntry *BouncingIeee8021dRelay::chooseInterface()
 void BouncingIeee8021dRelay::handlePacketFromOverflowBuffer(Packet *packet)
 {
     // std::cout << "Inside handlePacketFromOverflowBuffer" << endl;
-    // Qiao: take out phyheader if exist in packet to prevent error
-    // std::cout << "Here is the packet: " << packet << endl;
-    // // Qiao: add check if phy header exist
-    // auto phyHeaderPeek = packet->peekAtFront();
-    // bool hasPhyHeader = 0;
-    // auto headerLen = phyHeaderPeek->getChunkLength();
-    // if (headerLen == B(8)) {
-    //     hasPhyHeader = 1;
-    // };
-    // Ptr<EthernetPhyHeader> phyHeader = nullptr;
-    // if (hasPhyHeader) {
-    //     phyHeader = packet->removeAtFront<EthernetPhyHeader>();
-    // }
+
     // // std::cout << "Here is the packet after removing phy header: " << packet << endl;
 
     const auto& frame = packet->peekAtFront<EthernetMacHeader>();
@@ -1025,12 +1006,7 @@ void BouncingIeee8021dRelay::handlePacketFromOverflowBuffer(Packet *packet)
         // std::cout << "interfaceReq is : " << interfaceReq << endl;
         // std::cout << "interfaceID is : " << interfaceId << endl;
         // std::cout << "Here is the packet: " << packet << endl;
-    // // Qiao: pop back phyheader
-    // // Qiao: insert phyheader if packet had one
-    // if (hasPhyHeader) {
-    //     packet->insertAtFront(phyHeader);
-    //         // std::cout << "Here is the packet: " << packet << endl;
-    // }
+
     if (interfaceId != -1) {
         // std::cout << "Interfaceid != -1" << endl;
 
