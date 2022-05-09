@@ -84,7 +84,7 @@ void BouncingIeee8021dRelay::initialize(int stage)
 
         // Qiao: initialized the overflow buffer
         overflowBuffer = new OverflowBuffer();
-        overflowBuffer->setLenCapacity(80000);
+        overflowBuffer->setLenCapacity(160000);
         // // std::cout << "This is the overflowBuffer just initiated: " << overflowBuffer << endl;
         // std::cout << "Boucing initializing, overflowBuffer packet capacity: " << overflowBuffer->getMaxNumPackets() << endl;
         // std::cout << "Boucing initializing, overflowBuffer length capacity: " << overflowBuffer->getMaxTotalLength() << endl;
