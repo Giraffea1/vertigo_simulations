@@ -36,6 +36,8 @@ simple BouncingIeee8021dRelay like IMacRelayUnit
         @display("i=block/broadcast;bgb=425,114");
         string interfaceTableModule = default("^.interfaceTable"); // The path to the InterfaceTable module
         string macTableModule = default("^.macTable");             // The path to the MacAddressTable module
+        string overflowBufferModule = default("^.overflowBuffer");
+
         @signal[packetSentToLower](type=cPacket);
         @signal[packetReceivedFromLower](type=cPacket);
         @signal[packetReceivedFromUpper](type=cPacket);

@@ -15,34 +15,15 @@ namespace queueing {
 class INET_API OverflowBuffer : public PacketBuffer
 {
   protected:
-    int packetCapacity = -1;
-    b dataCapacity = b(-1);
-
-    b totalLength = b(0);
-    std::vector<Packet *> packets;
-
-    IPacketDropperFunction *packetDropperFunction = nullptr;
-
-  protected:
-    virtual void initialize(int stage) override;
-
-    virtual bool isOverloaded();
+    // test variable
+    int testV = 3;
+    // const char *testS;
+    IPacketDropperFunction *packetDropperFunction = check_and_cast<IPacketDropperFunction *>(createOne("inet::queueing::PacketAtCollectionBeginDropper"));;
 
   public:
-    virtual int getMaxNumPackets() override { return packetCapacity; }
-    virtual int getNumPackets() override { return packets.size(); }
-
-    virtual b getMaxTotalLength() override { return dataCapacity; }
-    virtual b getTotalLength() override { return totalLength; }
-
-    virtual Packet *getPacket(int index) override;
-    virtual bool isEmpty() override { return packets.size() == 0; }
-
     virtual void addPacket(Packet *packet) override;
     virtual void removePacket(Packet *packet) override;
-
-    virtual bool supportsPushPacket(cGate *gate) override { return false; }
-    virtual bool supportsPopPacket(cGate *gate) override { return false; }
+    virtual void setLenCapacity(int length) {dataCapacity = b(length);};
 };
 
 } // namespace queueing

@@ -29,4 +29,8 @@ import inet.queueing.contract.IPacketBuffer;
 //
 simple OverflowBuffer extends PacketBuffer
 {
+    parameters:
+        // int testV = 2;
+        // dataCapacity = b(7000);
+        dropperClass = default("inet::queueing::PacketAtCollectionBeginDropper"); // determines which packets are dropped when the buffer is overloaded, packets are not dropped by default; the parameter must be the name of a C++ class which implements the IPacketDropperFunction C++ interface and is registered via Register_Class
 }
